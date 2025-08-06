@@ -39,7 +39,7 @@ const RankingPage = () => {
 
     // 현재 사용자가 인증했다면 랭킹에 추가
     if (currentUserAuth) {
-      const userTime = currentUserAuth.time.replace(':', '');
+      const userTime = currentUserAuth.time.replace(':', '').split(' ')[1]
       let userRank = 1;
       
       // 사용자의 순위 계산
@@ -127,7 +127,7 @@ const RankingPage = () => {
               <p className={`text-sm ${
                 user.isCurrentUser ? 'text-white' : 'text-muted-foreground'
               }`}>
-                {user.time}
+                {user.isCurrentUser ? user.time.split(' ')[1] : user.time}
               </p>
             </Card>
           ))}
@@ -167,30 +167,13 @@ const RankingPage = () => {
                   <p className={`font-mono text-lg ${
                     user.isCurrentUser ? 'text-white' : 'text-foreground'
                   }`}>
-                    {user.time}
+                    {user.isCurrentUser ? user.time.split(' ')[1] : user.time}
                   </p>
                 </div>
               </div>
             ))}
           </div>
         </Card>
-
-        {/* 하단 버튼들 */}
-        <div className="flex gap-4">
-          <Button
-            onClick={() => navigate("/auth")}
-            className="flex-1 h-12 bg-gradient-morning hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-300"
-          >
-            다시 인증하기 🌅
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/")}
-            className="flex-1 h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-xl transition-all duration-300"
-          >
-            홈으로 🏠
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -29,13 +29,24 @@ const AuthPage = () => {
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setCurrentQuote(randomQuote);
     
-    // 현재 시간 설정
-    const now = new Date();
-    setCurrentTime(now.toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit'
-    }));
+    // 현재 시간 설정 및 실시간 업데이트
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('ko-KR', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      }));
+    };
+    
+    // 초기 시간 설정
+    updateTime();
+    
+    // 1초마다 시간 업데이트
+    const interval = setInterval(updateTime, 1000);
+    
+    // 컴포넌트 언마운트 시 인터벌 정리
+    return () => clearInterval(interval);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,15 +157,6 @@ const AuthPage = () => {
             className="w-full h-12 bg-gradient-morning hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50"
           >
             {isCompleted ? "기상 인증하기 🌅" : "명언을 모두 입력해주세요"}
-          </Button>
-
-          {/* 랭킹 페이지로 이동 버튼 */}
-          <Button
-            variant="outline"
-            onClick={() => navigate("/ranking")}
-            className="w-full h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-xl transition-all duration-300"
-          >
-            랭킹 보러가기 🏆
           </Button>
         </div>
       </Card>
