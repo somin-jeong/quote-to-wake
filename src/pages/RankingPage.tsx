@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ranking } from "@/lib/ranking";
+import { supabase } from "@/lib/supabase";
 
 interface RankingData {
   rank: number;
@@ -15,62 +17,68 @@ const RankingPage = () => {
   const navigate = useNavigate();
   const [rankings, setRankings] = useState<RankingData[]>([]);
   const [currentUserAuth, setCurrentUserAuth] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // 사용자 확인
+    const user = localStorage.getItem('user');
+    if (!user) {
+      // 로그인 페이지로 이동
+      navigate('/');
+      return;
+    }
+    setCurrentUser(JSON.parse(user));
+
     // 오늘의 인증 기록 확인
     const authData = localStorage.getItem('todayAuth');
     if (authData) {
       setCurrentUserAuth(JSON.parse(authData));
     }
 
-    // 모의 랭킹 데이터 생성
-    const mockRankings: RankingData[] = [
-      { rank: 1, name: "김민수", time: "05:30" },
-      { rank: 2, name: "이지영", time: "05:45" },
-      { rank: 3, name: "박준호", time: "06:00" },
-      { rank: 4, name: "최수진", time: "06:15" },
-      { rank: 5, name: "정현우", time: "06:20" },
-      { rank: 6, name: "강다은", time: "06:30" },
-      { rank: 7, name: "윤서연", time: "06:45" },
-      { rank: 8, name: "임재현", time: "07:00" },
-      { rank: 9, name: "송미나", time: "07:15" },
-      { rank: 10, name: "한동석", time: "07:30" }
-    ];
-
-    // 현재 사용자가 인증했다면 랭킹에 추가
-    if (currentUserAuth) {
-      const userTime = currentUserAuth.time.replace(':', '').split(' ')[1]
-      let userRank = 1;
-      
-      // 사용자의 순위 계산
-      for (let i = 0; i < mockRankings.length; i++) {
-        const rankTime = mockRankings[i].time.replace(':', '');
-        if (userTime > rankTime) {
-          userRank = i + 2;
-        } else {
-          break;
+    // 실시간 랭킹 데이터 가져오기
+    const fetchRankings = async () => {
+      try {
+        const { data, error } = await ranking.getTodayRankings();
+        if (error) {
+          console.error('랭킹 데이터 가져오기 실패:', error);
+          return;
         }
+
+        if (data) {
+          const formattedRankings: RankingData[] = data.map((record, index) => ({
+            rank: index + 1,
+            name: record.user_name,
+            time: record.auth_time,
+            isCurrentUser: record.user_id === JSON.parse(user).id
+          }));
+          setRankings(formattedRankings);
+        }
+      } catch (error) {
+        console.error('랭킹 데이터 가져오기 오류:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      // 랭킹에 사용자 삽입
-      const updatedRankings = [...mockRankings];
-      updatedRankings.splice(userRank - 1, 0, {
-        rank: userRank,
-        name: "나",
-        time: currentUserAuth.time,
-        isCurrentUser: true
-      });
+    fetchRankings();
 
-      // 순위 재정렬
-      updatedRankings.forEach((item, index) => {
-        item.rank = index + 1;
-      });
+    // 실시간 구독 설정
+    const subscription = supabase
+      .channel('rankings_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'rankings' }, 
+        () => {
+          // 랭킹 변경 시 데이터 다시 가져오기
+          fetchRankings();
+        }
+      )
+      .subscribe();
 
-      setRankings(updatedRankings.slice(0, 15)); // 상위 15명만 표시
-    } else {
-      setRankings(mockRankings);
-    }
-  }, [currentUserAuth]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -90,6 +98,17 @@ const RankingPage = () => {
       weekday: 'long'
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-sky flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl mb-4">🏆</div>
+          <div className="text-lg">랭킹을 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-sky p-4">

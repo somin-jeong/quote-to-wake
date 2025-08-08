@@ -1,20 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
+import { users } from "@/lib/users";
+import { useToast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // 로컬 스토리지에서만 확인 (OAuth 리다이렉트는 제거)
+    const localUser = localStorage.getItem('user');
+    if (localUser) {
+      navigate('/auth');
+    }
+  }, [navigate]);
+
   const handleKakaoLogin = async () => {
+    console.log('카카오 로그인 버튼 클릭');
     setIsLoading(true);
-    // 실제 카카오 로그인 로직은 여기에 구현
-    // 현재는 모의 로그인으로 처리
-    setTimeout(() => {
+    try {
+      const { error } = await auth.signInWithKakao();
+      console.log('카카오 로그인 응답:', { error });
+      
+      if (error) {
+        console.error('카카오 로그인 오류:', error);
+        toast({
+          title: "로그인 실패",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        console.log('카카오 로그인 성공, 유저 정보 처리 시작');
+        // 로그인 성공 시 유저 정보 저장
+        const { user } = await auth.handleAuthRedirect();
+        console.log('유저 정보 처리 결과:', { user });
+        
+        if (user) {
+          console.log('유저 정보 저장 시작');
+          // 유저 정보를 Supabase에 저장
+          const { error: userError } = await users.upsertUser({
+            id: user.id,           // email
+            name: user.name || '익명',  // 카카오 닉네임
+            profile_url: user.profile_url  // 프로필 이미지 링크
+          });
+          
+          if (userError) {
+            console.error('유저 정보 저장 오류:', userError);
+          } else {
+            console.log('유저 정보 저장 성공');
+          }
+          
+          navigate('/auth');
+        }
+      }
+    } catch (error) {
+      console.error('카카오 로그인 예외:', error);
+      toast({
+        title: "로그인 오류",
+        description: "로그인 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-      navigate("/auth");
-    }, 1500);
+    }
   };
 
   return (

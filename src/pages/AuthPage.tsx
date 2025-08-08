@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { auth } from "@/lib/auth";
+import { ranking } from "@/lib/ranking";
+import { users } from "@/lib/users";
 
 const quotes = [
   "성공은 준비된 기회를 만났을 때 일어난다.",
@@ -23,11 +26,48 @@ const AuthPage = () => {
   const [userInput, setUserInput] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    // 랜덤 명언 선택
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    setCurrentQuote(randomQuote);
+    // 사용자 확인
+    const user = localStorage.getItem('user');
+    if (!user) {
+      console.log('사용자 정보 없음, 로그인 페이지로 이동');
+      navigate('/');
+      return;
+    }
+    const userData = JSON.parse(user);
+    console.log('현재 사용자:', userData);
+    setCurrentUser(userData);
+
+    // 오늘 이미 인증했는지 확인
+    const checkTodayAuth = async () => {
+      try {
+        const { data: existingAuth } = await ranking.checkTodayAuth(userData.id);
+        if (existingAuth) {
+          // 이미 오늘 인증했다면 랭킹 페이지로 이동
+          toast({
+            title: "이미 인증 완료",
+            description: "오늘은 이미 기상 인증을 완료하셨습니다.",
+          });
+          setTimeout(() => {
+            navigate('/ranking');
+          }, 2000);
+          return;
+        }
+      } catch (error) {
+        console.error('인증 확인 오류:', error);
+      }
+    };
+
+    checkTodayAuth();
+
+    // 날짜 기반 랜덤 명언 선택 (매일 같은 명언)
+    const today = new Date().toDateString();
+    const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const randomIndex = seed % quotes.length;
+    const dailyQuote = quotes[randomIndex];
+    setCurrentQuote(dailyQuote);
     
     // 현재 시간 설정 및 실시간 업데이트
     const updateTime = () => {
@@ -47,7 +87,7 @@ const AuthPage = () => {
     
     // 컴포넌트 언마운트 시 인터벌 정리
     return () => clearInterval(interval);
-  }, []);
+  }, [navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
@@ -60,31 +100,69 @@ const AuthPage = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (userInput === currentQuote) {
-      // 인증 성공 로직
-      const authTime = new Date().toLocaleTimeString('ko-KR', { 
-        hour: '2-digit', 
-        minute: '2-digit'
-      });
-      
-      // 로컬 스토리지에 오늘의 인증 기록 저장
-      const today = new Date().toDateString();
-      const authData = {
-        date: today,
-        time: authTime,
-        quote: currentQuote
-      };
-      localStorage.setItem('todayAuth', JSON.stringify(authData));
-      
-      toast({
-        title: "🎉 기상 인증 완료!",
-        description: `${authTime}에 인증하셨습니다.`,
-      });
-      
-      setTimeout(() => {
-        navigate("/ranking");
-      }, 2000);
+  const handleSubmit = async () => {
+    if (userInput === currentQuote && currentUser) {
+      try {
+        const authTime = new Date().toLocaleTimeString('ko-KR', { 
+          hour: '2-digit', 
+          minute: '2-digit'
+        });
+        const authDate = new Date().toISOString().split('T')[0];
+        
+        // 이미 오늘 인증했는지 확인
+        const { data: existingAuth } = await ranking.checkTodayAuth(currentUser.id);
+        if (existingAuth) {
+          toast({
+            title: "⚠️ 이미 인증 완료",
+            description: "오늘은 이미 인증하셨습니다.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // 유저 정보는 이미 로그인 시점에 저장되었으므로 여기서는 랭킹만 저장
+        
+        // 랭킹에 기록 추가
+        const { error } = await ranking.addRanking({
+          user_id: currentUser.id,  // email
+          user_name: currentUser.name || '익명',
+          auth_time: authTime,
+          auth_date: authDate,
+          quote: currentQuote
+        });
+        
+        if (error) {
+          toast({
+            title: "⚠️ 저장 실패",
+            description: "랭킹 저장 중 오류가 발생했습니다.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // 로컬 스토리지에 오늘의 인증 기록 저장
+        const authData = {
+          date: authDate,
+          time: authTime,
+          quote: currentQuote
+        };
+        localStorage.setItem('todayAuth', JSON.stringify(authData));
+        
+        toast({
+          title: "🎉 기상 인증 완료!",
+          description: `${authTime}에 인증하셨습니다.`,
+        });
+        
+        setTimeout(() => {
+          navigate("/ranking");
+        }, 2000);
+      } catch (error) {
+        toast({
+          title: "⚠️ 인증 실패",
+          description: "인증 중 오류가 발생했습니다.",
+          variant: "destructive"
+        });
+      }
     } else {
       toast({
         title: "⚠️ 인증 실패",
