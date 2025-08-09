@@ -136,29 +136,43 @@ const LoginPage = () => {
       console.log('LoginPage: 카카오 로그인 응답 - data:', result.data);
       console.log('LoginPage: 카카오 로그인 응답 - error:', result.error);
       
-      window.location.href = result.data.url;
-      // 응답 데이터를 로컬 스토리지에 저장 (리다이렉트 후에도 확인 가능)
-      localStorage.setItem('lastKakaoResponse', JSON.stringify({
-        timestamp: new Date().toISOString(),
-        data: result.data,
-        error: result.error,
-        url: window.location.href
-      }));
-      console.log('LoginPage: 카카오 로그인 응답을 로컬 스토리지에 저장 완료');
-      
-      const { error } = result;
-      
-      if (error) {
-        console.error('카카오 로그인 오류:', error);
+      if (result.error) {
+        console.error('카카오 로그인 오류:', result.error);
         toast({
           title: "로그인 실패",
-          description: error.message,
+          description: result.error.message,
           variant: "destructive"
         });
+        return;
+      }
+      
+      if (result.data?.url) {
+        console.log('LoginPage: OAuth URL 감지, 리다이렉트 준비 중...');
+        
+        // 응답 데이터를 로컬 스토리지에 저장 (리다이렉트 후에도 확인 가능)
+        localStorage.setItem('lastKakaoResponse', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          data: result.data,
+          error: result.error,
+          url: window.location.href,
+          redirected: false // 리다이렉트 플래그 초기화
+        }));
+        console.log('LoginPage: 카카오 로그인 응답을 로컬 스토리지에 저장 완료');
+        
+        // 잠시 후 리다이렉트 (localStorage 저장을 보장)
+        setTimeout(() => {
+          console.log('LoginPage: 카카오 OAuth 페이지로 리다이렉트 시작:', result.data.url);
+          window.location.href = result.data.url;
+        }, 100);
+        
+        console.log('LoginPage: 카카오 로그인 성공, OAuth 리다이렉트 시작...');
       } else {
-        console.log('카카오 로그인 성공, OAuth 리다이렉트 대기 중...');
-        // OAuth 리다이렉트를 기다리므로 여기서는 아무것도 하지 않음
-        // useEffect에서 OAuth 리다이렉트를 처리함
+        console.error('LoginPage: OAuth URL이 없음');
+        toast({
+          title: "로그인 실패",
+          description: "OAuth URL을 받지 못했습니다.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('카카오 로그인 예외:', error);
