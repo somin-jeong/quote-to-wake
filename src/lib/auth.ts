@@ -46,10 +46,10 @@ export const auth = {
     return supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const user: User = {
-          id: session.user.id,
+          id: session.user.email || session.user.id,  // email을 id로 사용
           email: session.user.email,
-          name: session.user.user_metadata?.name,
-          avatar_url: session.user.user_metadata?.avatar_url,
+          name: session.user.user_metadata?.name || session.user.user_metadata?.nickname,
+          profile_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
           provider: session.user.app_metadata?.provider
         }
         localStorage.setItem('user', JSON.stringify(user))
@@ -64,11 +64,15 @@ export const auth = {
   // OAuth 리다이렉트 처리
   handleAuthRedirect: async () => {
     try {
+      console.log('OAuth 리다이렉트 처리 시작');
       const { data, error } = await supabase.auth.getSession()
       if (error) {
         console.error('세션 가져오기 오류:', error)
         return { user: null, error }
       }
+      
+      console.log('세션 데이터:', data);
+      console.log('사용자 데이터:', data.session?.user);
       
       if (data.session?.user) {
         const user: User = {
@@ -79,11 +83,11 @@ export const auth = {
           provider: data.session.user.app_metadata?.provider
         }
         localStorage.setItem('user', JSON.stringify(user))
-        console.log('OAuth 로그인 성공:', user)
+        console.log('OAuth 로그인 성공, 저장된 사용자:', user)
         return { user, error: null }
       }
       console.log('OAuth 세션 없음')
-      return { user: null, error: null }
+      return { user: null, error }
     } catch (error) {
       console.error('OAuth 리다이렉트 처리 오류:', error)
       return { user: null, error }
