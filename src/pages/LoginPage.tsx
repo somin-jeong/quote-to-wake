@@ -54,7 +54,21 @@ const LoginPage = () => {
       console.log('LoginPage: URL 파라미터:', Object.fromEntries(urlParams.entries()));
       console.log('LoginPage: 해시 파라미터:', hashParams);
       
-      const hasAuthParams = urlParams.has('access_token') || urlParams.has('refresh_token') || hashParams.includes('access_token');
+      // OAuth 파라미터 감지 로직 개선
+      const hasAccessToken = urlParams.has('access_token') || hashParams.includes('access_token');
+      const hasRefreshToken = urlParams.has('refresh_token') || hashParams.includes('refresh_token');
+      const hasCode = urlParams.has('code') || hashParams.includes('code');
+      const hasError = urlParams.has('error') || hashParams.includes('error');
+      
+      console.log('LoginPage: OAuth 파라미터 상세 분석:');
+      console.log('  - access_token 존재:', hasAccessToken);
+      console.log('  - refresh_token 존재:', hasRefreshToken);
+      console.log('  - code 존재:', hasCode);
+      console.log('  - error 존재:', hasError);
+      console.log('  - 전체 URL:', window.location.href);
+      console.log('  - 해시 전체:', hashParams);
+      
+      const hasAuthParams = hasAccessToken || hasRefreshToken || hasCode;
       console.log('LoginPage: OAuth 파라미터 존재 여부:', hasAuthParams);
       
       if (hasAuthParams) {
