@@ -18,7 +18,14 @@ const LoginPage = () => {
       
       // URL에서 auth 관련 파라미터 확인
       const urlParams = new URLSearchParams(window.location.search);
-      const hasAuthParams = urlParams.has('access_token') || urlParams.has('refresh_token') || window.location.hash.includes('access_token');
+      const hashParams = window.location.hash;
+      
+      console.log('LoginPage: 현재 URL:', window.location.href);
+      console.log('LoginPage: URL 파라미터:', Object.fromEntries(urlParams.entries()));
+      console.log('LoginPage: 해시 파라미터:', hashParams);
+      
+      const hasAuthParams = urlParams.has('access_token') || urlParams.has('refresh_token') || hashParams.includes('access_token');
+      console.log('LoginPage: OAuth 파라미터 존재 여부:', hasAuthParams);
       
       if (hasAuthParams) {
         console.log('LoginPage: OAuth 파라미터 감지됨, 인증 처리 시작');
@@ -53,11 +60,17 @@ const LoginPage = () => {
           console.error('LoginPage: OAuth 처리 중 오류:', error);
         }
       } else {
+        console.log('LoginPage: OAuth 파라미터가 없음, 일반 로그인 플로우 진행');
+        
         // 일반적인 로컬 스토리지 확인
         const localUser = localStorage.getItem('user');
+        console.log('LoginPage: 로컬 스토리지 사용자 정보:', localUser);
+        
         if (localUser) {
           console.log('LoginPage: 기존 사용자 정보 발견, 인증 페이지로 이동');
           navigate('/auth');
+        } else {
+          console.log('LoginPage: 로그인 필요 상태');
         }
       }
     };
@@ -66,11 +79,16 @@ const LoginPage = () => {
   }, [navigate]);
 
   const handleKakaoLogin = async () => {
-    console.log('카카오 로그인 버튼 클릭');
+    console.log('=== 카카오 로그인 시작 ===');
+    console.log('LoginPage: 카카오 로그인 버튼 클릭됨');
+    console.log('LoginPage: 현재 URL:', window.location.href);
+    console.log('LoginPage: 로컬 스토리지 상태:', localStorage.getItem('user'));
+    
     setIsLoading(true);
     try {
+      console.log('LoginPage: auth.signInWithKakao() 호출 시작');
       const { error } = await auth.signInWithKakao();
-      console.log('카카오 로그인 응답:', { error });
+      console.log('LoginPage: 카카오 로그인 응답:', { error });
       
       if (error) {
         console.error('카카오 로그인 오류:', error);
