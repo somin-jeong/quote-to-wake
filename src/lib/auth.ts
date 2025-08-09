@@ -11,27 +11,51 @@ export interface User {
 export const auth = {
   // 카카오 로그인 (OAuth) - 이메일 요청 없이
   signInWithKakao: async () => {
-    console.log('카카오 로그인 시작');
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: {
-        redirectTo: `${window.location.origin}/auth`,
-        queryParams: {
-          // 이메일 요청 완전 제거
-          scope: 'profile_nickname profile_image'
+    console.log('=== auth.ts: 카카오 로그인 시작 ===');
+    console.log('auth.ts: 현재 origin:', window.location.origin);
+    console.log('auth.ts: redirectTo URL:', `${window.location.origin}/auth`);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            // 이메일 요청 완전 제거
+            scope: 'profile_nickname profile_image'
+          }
         }
+      })
+      
+      console.log('auth.ts: Supabase OAuth 응답 - data:', data);
+      console.log('auth.ts: Supabase OAuth 응답 - error:', error);
+      console.log('auth.ts: 전체 응답 객체:', { data, error });
+      
+      if (error) {
+        console.error('auth.ts: 카카오 로그인 오류 발생:', error);
+      } else {
+        console.log('auth.ts: 카카오 로그인 성공, 리다이렉트 대기 중...');
       }
-    })
-    console.log('카카오 로그인 결과:', { data, error });
-    return { data, error }
+      
+      return { data, error }
+    } catch (catchError) {
+      console.error('auth.ts: 카카오 로그인 예외 발생:', catchError);
+      return { data: null, error: catchError }
+    }
   },
 
   // 로그아웃
   signOut: async () => {
+    console.log('로그아웃 시작');
     const { error } = await supabase.auth.signOut()
     if (!error) {
+      console.log('Supabase 세션 제거 성공');
       localStorage.removeItem('user')
+      console.log('로컬 스토리지 사용자 정보 제거 완료');
+    } else {
+      console.error('Supabase 세션 제거 실패:', error);
     }
+    console.log('로그아웃 완료');
     return { error }
   },
 

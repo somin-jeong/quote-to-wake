@@ -87,8 +87,12 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       console.log('LoginPage: auth.signInWithKakao() 호출 시작');
-      const { error } = await auth.signInWithKakao();
-      console.log('LoginPage: 카카오 로그인 응답:', { error });
+      const result = await auth.signInWithKakao();
+      console.log('LoginPage: auth.signInWithKakao() 완료, 전체 결과:', result);
+      console.log('LoginPage: 카카오 로그인 응답 - data:', result.data);
+      console.log('LoginPage: 카카오 로그인 응답 - error:', result.error);
+      
+      const { error } = result;
       
       if (error) {
         console.error('카카오 로그인 오류:', error);
