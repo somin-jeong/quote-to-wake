@@ -29,8 +29,13 @@ const LoginPage = () => {
           console.log('=== 이전 응답 데이터 끝 ===');
           
           // 카카오 OAuth URL이 있으면 자동으로 리다이렉트
-          if (responseData.data?.url) {
+          if (responseData.data?.url && !responseData.redirected) {
             console.log('카카오 OAuth URL 감지, 자동 리다이렉트 시작:', responseData.data.url);
+            // 리다이렉트 플래그 설정하여 무한 루프 방지
+            localStorage.setItem('lastKakaoResponse', JSON.stringify({
+              ...responseData,
+              redirected: true
+            }));
             window.location.href = responseData.data.url;
             return;
           }
@@ -38,22 +43,7 @@ const LoginPage = () => {
           console.error('LoginPage: 저장된 응답 데이터 파싱 오류:', e);
         }
       }
-      
-      // 이전 테스트 로그인 응답 데이터 확인 및 표시
-      const lastTestResponse = localStorage.getItem('lastTestResponse');
-      if (lastTestResponse) {
-        try {
-          const testResponseData = JSON.parse(lastTestResponse);
-          console.log('=== 이전 테스트 로그인 응답 데이터 ===');
-          console.log('LoginPage: 저장된 테스트 응답 시간:', testResponseData.timestamp);
-          console.log('LoginPage: 저장된 테스트 사용자:', testResponseData.user);
-          console.log('LoginPage: 저장된 테스트 성공 여부:', testResponseData.success);
-          console.log('LoginPage: 저장된 테스트 메시지:', testResponseData.message);
-          console.log('=== 이전 테스트 응답 데이터 끝 ===');
-        } catch (e) {
-          console.error('LoginPage: 저장된 테스트 응답 데이터 파싱 오류:', e);
-        }
-      }
+    
       
       // URL에서 auth 관련 파라미터 확인
       const urlParams = new URLSearchParams(window.location.search);
