@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { users } from "@/lib/users";
 import { useToast } from "@/hooks/use-toast";
+import { CloudCog } from "lucide-react";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -121,6 +122,7 @@ const LoginPage = () => {
       console.log('LoginPage: 카카오 로그인 응답 - data:', result.data);
       console.log('LoginPage: 카카오 로그인 응답 - error:', result.error);
       
+      window.location.href = result.data.url;
       // 응답 데이터를 로컬 스토리지에 저장 (리다이렉트 후에도 확인 가능)
       localStorage.setItem('lastKakaoResponse', JSON.stringify({
         timestamp: new Date().toISOString(),
