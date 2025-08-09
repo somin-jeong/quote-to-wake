@@ -13,13 +13,13 @@ export const auth = {
   signInWithKakao: async () => {
     console.log('=== auth.ts: 카카오 로그인 시작 ===');
     console.log('auth.ts: 현재 origin:', window.location.origin);
-    console.log('auth.ts: redirectTo URL:', `${window.location.origin}/auth`);
+    console.log('auth.ts: redirectTo URL:', `${window.location.origin}/`);
     
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/`,
           queryParams: {
             // 이메일 요청 완전 제거
             scope: 'profile_nickname profile_image'
