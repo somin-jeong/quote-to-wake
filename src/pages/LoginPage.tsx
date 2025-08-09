@@ -12,11 +12,57 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // 로컬 스토리지에서만 확인 (OAuth 리다이렉트는 제거)
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      navigate('/auth');
-    }
+    // OAuth 리다이렉트 처리
+    const handleOAuthRedirect = async () => {
+      console.log('LoginPage: OAuth 리다이렉트 처리 시작');
+      
+      // URL에서 auth 관련 파라미터 확인
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasAuthParams = urlParams.has('access_token') || urlParams.has('refresh_token') || window.location.hash.includes('access_token');
+      
+      if (hasAuthParams) {
+        console.log('LoginPage: OAuth 파라미터 감지됨, 인증 처리 시작');
+        try {
+          const { user, error } = await auth.handleAuthRedirect();
+          console.log('LoginPage: OAuth 인증 결과:', { user, error });
+          
+          if (user) {
+            console.log('LoginPage: 사용자 정보 저장 시작');
+            // 유저 정보를 Supabase에 저장
+            const { error: userError } = await users.upsertUser({
+              id: user.id,
+              name: user.name || '익명',
+              profile_url: user.profile_url
+            });
+            
+            if (userError) {
+              console.error('LoginPage: 유저 정보 저장 오류:', userError);
+            } else {
+              console.log('LoginPage: 유저 정보 저장 성공');
+            }
+            
+            // 로컬 스토리지에 사용자 정보 저장
+            localStorage.setItem('user', JSON.stringify(user));
+            console.log('LoginPage: 로컬 스토리지에 사용자 정보 저장 완료');
+            
+            navigate('/auth');
+          } else {
+            console.log('LoginPage: 사용자 정보 없음, 로그인 실패');
+          }
+        } catch (error) {
+          console.error('LoginPage: OAuth 처리 중 오류:', error);
+        }
+      } else {
+        // 일반적인 로컬 스토리지 확인
+        const localUser = localStorage.getItem('user');
+        if (localUser) {
+          console.log('LoginPage: 기존 사용자 정보 발견, 인증 페이지로 이동');
+          navigate('/auth');
+        }
+      }
+    };
+    
+    handleOAuthRedirect();
   }, [navigate]);
 
   const handleKakaoLogin = async () => {
@@ -34,28 +80,9 @@ const LoginPage = () => {
           variant: "destructive"
         });
       } else {
-        console.log('카카오 로그인 성공, 유저 정보 처리 시작');
-        // 로그인 성공 시 유저 정보 저장
-        const { user } = await auth.handleAuthRedirect();
-        console.log('유저 정보 처리 결과:', { user });
-        
-        if (user) {
-          console.log('유저 정보 저장 시작');
-          // 유저 정보를 Supabase에 저장
-          const { error: userError } = await users.upsertUser({
-            id: user.id,           // email
-            name: user.name || '익명',  // 카카오 닉네임
-            profile_url: user.profile_url  // 프로필 이미지 링크
-          });
-          
-          if (userError) {
-            console.error('유저 정보 저장 오류:', userError);
-          } else {
-            console.log('유저 정보 저장 성공');
-          }
-          
-          navigate('/auth');
-        }
+        console.log('카카오 로그인 성공, OAuth 리다이렉트 대기 중...');
+        // OAuth 리다이렉트를 기다리므로 여기서는 아무것도 하지 않음
+        // useEffect에서 OAuth 리다이렉트를 처리함
       }
     } catch (error) {
       console.error('카카오 로그인 예외:', error);
