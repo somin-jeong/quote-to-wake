@@ -27,6 +27,13 @@ const LoginPage = () => {
           console.log('LoginPage: 저장된 응답 error:', responseData.error);
           console.log('LoginPage: 저장된 URL:', responseData.url);
           console.log('=== 이전 응답 데이터 끝 ===');
+          
+          // 카카오 OAuth URL이 있으면 자동으로 리다이렉트
+          if (responseData.data?.url) {
+            console.log('카카오 OAuth URL 감지, 자동 리다이렉트 시작:', responseData.data.url);
+            window.location.href = responseData.data.url;
+            return;
+          }
         } catch (e) {
           console.error('LoginPage: 저장된 응답 데이터 파싱 오류:', e);
         }
