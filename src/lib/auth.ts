@@ -21,8 +21,8 @@ export const auth = {
         options: {
           redirectTo: `${window.location.origin}/`,
           queryParams: {
-            // 이메일 요청 완전 제거
-            scope: 'profile_nickname profile_image'
+            // 이메일 포함하여 요청
+            scope: 'profile_nickname profile_image account_email'
           }
         }
       })
