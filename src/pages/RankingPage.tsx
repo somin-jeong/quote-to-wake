@@ -118,7 +118,7 @@ const RankingPage = () => {
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-foreground">🏆 일일 랭킹</h1>
             <p className="text-muted-foreground">{getCurrentDate()}</p>
-            {currentUserAuth && (
+            {currentUserAuth && currentUserAuth.time && (
               <Badge className="bg-gradient-morning text-white px-4 py-1">
                 오늘 {currentUserAuth.time}에 인증 완료!
               </Badge>

@@ -105,7 +105,8 @@ const AuthPage = () => {
       try {
         const authTime = new Date().toLocaleTimeString('ko-KR', { 
           hour: '2-digit', 
-          minute: '2-digit'
+          minute: '2-digit',
+          second: '2-digit'  // 초도 포함
         });
         const authDate = new Date().toISOString().split('T')[0];
         
