@@ -141,7 +141,7 @@ const RankingPage = () => {
               <p className={`text-sm ${
                 user.isCurrentUser ? 'text-white' : 'text-muted-foreground'
               }`}>
-                {user.isCurrentUser ? user.time.split(' ')[1] : user.time}
+                {user.time}
               </p>
             </Card>
           ))}
@@ -181,7 +181,7 @@ const RankingPage = () => {
                   <p className={`font-mono text-lg ${
                     user.isCurrentUser ? 'text-white' : 'text-foreground'
                   }`}>
-                    {user.isCurrentUser ? user.time.split(' ')[1] : user.time}
+                    {user.time}
                   </p>
                 </div>
               </div>
