@@ -130,17 +130,17 @@ const RankingPage = () => {
                 user.isCurrentUser ? 'bg-gradient-morning text-white shadow-glow' : 'bg-gradient-card'
               } ${index === 0 ? 'order-2 scale-110' : index === 1 ? 'order-1' : 'order-3'}`}
             >
-              <div className={`text-4xl ${index === 0 ? 'text-6xl' : ''}`}>
+              <div className={`
+                ${index === 0 ? 'text-5xl sm:text-6xl' : 'text-3xl sm:text-4xl'}`}>
                 {getRankIcon(user.rank)}
               </div>
-              <h3 className={`font-bold ${index === 0 ? 'text-xl' : ''} ${
-                user.isCurrentUser ? 'text-white' : 'text-foreground'
-              }`}>
+              <h3 className={`font-bold
+                ${index === 0 ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'} 
+                ${user.isCurrentUser ? 'text-white' : 'text-foreground'}`}>
                 {user.name}
               </h3>
-              <p className={`text-sm ${
-                user.isCurrentUser ? 'text-white' : 'text-muted-foreground'
-              }`}>
+              <p className={`text-xs sm:text-sm
+                ${user.isCurrentUser ? 'text-white' : 'text-muted-foreground'}`}>
                 {user.time}
               </p>
             </Card>
@@ -148,28 +148,26 @@ const RankingPage = () => {
         </div>
 
         {/* 전체 랭킹 리스트 */}
-        <Card className="p-6 bg-gradient-card backdrop-blur-sm shadow-soft border-0">
-          <h2 className="text-xl font-bold text-foreground mb-4">전체 순위</h2>
+        <Card className="p-4 sm:p-6 bg-gradient-card backdrop-blur-sm shadow-soft border-0">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">전체 순위</h2>
           <div className="space-y-3">
             {rankings.map((user) => (
               <div
                 key={`${user.rank}-${user.name}`}
-                className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
+                className={`flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 ${
                   user.isCurrentUser 
                     ? 'bg-gradient-morning text-white shadow-glow' 
                     : 'bg-muted/50 hover:bg-muted'
                 }`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    user.rank <= 3 ? 'text-2xl' : 'text-lg'
-                  } ${
-                    user.isCurrentUser ? 'bg-white/20' : 'bg-primary/10'
-                  }`}>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold
+                    ${user.rank <= 3 ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'}
+                    ${user.isCurrentUser ? 'bg-white/20' : 'bg-primary/10'}`}>
                     {getRankIcon(user.rank)}
                   </div>
                   <div>
-                    <p className={`font-semibold ${
+                    <p className={`font-semibold text-sm sm:text-base ${
                       user.isCurrentUser ? 'text-white' : 'text-foreground'
                     }`}>
                       {user.name}
@@ -178,7 +176,7 @@ const RankingPage = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`font-mono text-lg ${
+                  <p className={`font-mono text-base sm:text-lg ${
                     user.isCurrentUser ? 'text-white' : 'text-foreground'
                   }`}>
                     {user.time}
